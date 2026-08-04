@@ -1,0 +1,1429 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>ESP32-Drone V2.0 — Full Setup Guide</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@300;400;500;600;700&family=JetBrains+Mono:wght@400;500;600&family=Inter:wght@300;400;500&display=swap" rel="stylesheet">
+<style>
+  :root {
+    --base:      #1e1e2e;
+    --mantle:    #181825;
+    --crust:     #11111b;
+    --surface0:  #313244;
+    --surface1:  #45475a;
+    --surface2:  #585b70;
+    --overlay0:  #6c7086;
+    --text:      #cdd6f4;
+    --subtext1:  #bac2de;
+    --subtext0:  #a6adc8;
+    --blue:      #89b4fa;
+    --sky:       #89dceb;
+    --sapphire:  #74c7ec;
+    --lavender:  #b4befe;
+    --green:     #a6e3a1;
+    --yellow:    #f9e2af;
+    --peach:     #fab387;
+    --red:       #f38ba8;
+    --mauve:     #cba6f7;
+    --teal:      #94e2d5;
+    --sidebar-w: 260px;
+  }
+
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+
+  html { scroll-behavior: smooth; }
+
+  body {
+    background: var(--base);
+    color: var(--text);
+    font-family: 'Inter', sans-serif;
+    font-size: 15px;
+    line-height: 1.7;
+    display: flex;
+    min-height: 100vh;
+  }
+
+  /* ── SIDEBAR ─────────────────────────────────────────── */
+  .sidebar {
+    width: var(--sidebar-w);
+    background: var(--mantle);
+    border-right: 1px solid var(--surface0);
+    position: fixed;
+    top: 0; left: 0;
+    height: 100vh;
+    overflow-y: auto;
+    flex-shrink: 0;
+    z-index: 100;
+    padding: 28px 0 40px;
+  }
+
+  .sidebar-logo {
+    padding: 0 20px 24px;
+    border-bottom: 1px solid var(--surface0);
+    margin-bottom: 16px;
+  }
+
+  .sidebar-logo .drone-name {
+    font-family: 'Space Grotesk', sans-serif;
+    font-weight: 700;
+    font-size: 13px;
+    letter-spacing: 0.1em;
+    text-transform: uppercase;
+    color: var(--blue);
+  }
+
+  .sidebar-logo .doc-title {
+    font-size: 11px;
+    color: var(--subtext0);
+    margin-top: 3px;
+    font-family: 'JetBrains Mono', monospace;
+  }
+
+  .sidebar nav a {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    padding: 7px 20px;
+    text-decoration: none;
+    font-size: 13px;
+    color: var(--subtext0);
+    transition: color 0.15s, background 0.15s;
+    border-left: 2px solid transparent;
+  }
+
+  .sidebar nav a:hover,
+  .sidebar nav a.active {
+    color: var(--text);
+    background: var(--surface0);
+    border-left-color: var(--blue);
+  }
+
+  .sidebar nav .section-label {
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 10px;
+    letter-spacing: 0.12em;
+    text-transform: uppercase;
+    color: var(--surface2);
+    padding: 18px 20px 6px;
+  }
+
+  .sidebar nav .step-num {
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 11px;
+    color: var(--blue);
+    opacity: 0.7;
+    min-width: 20px;
+  }
+
+  /* ── MAIN ────────────────────────────────────────────── */
+  main {
+    margin-left: var(--sidebar-w);
+    flex: 1;
+    max-width: 860px;
+    padding: 60px 52px 100px;
+  }
+
+  /* ── HERO ─────────────────────────────────────────────── */
+  .hero {
+    margin-bottom: 64px;
+    padding-bottom: 48px;
+    border-bottom: 1px solid var(--surface0);
+  }
+
+  .hero-eyebrow {
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 11px;
+    letter-spacing: 0.15em;
+    text-transform: uppercase;
+    color: var(--blue);
+    margin-bottom: 16px;
+  }
+
+  .hero h1 {
+    font-family: 'Space Grotesk', sans-serif;
+    font-weight: 700;
+    font-size: 42px;
+    line-height: 1.1;
+    letter-spacing: -0.02em;
+    color: var(--text);
+    margin-bottom: 16px;
+  }
+
+  .hero h1 span { color: var(--blue); }
+
+  .hero-desc {
+    color: var(--subtext1);
+    font-size: 16px;
+    max-width: 560px;
+    line-height: 1.65;
+  }
+
+  .hero-chips {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 8px;
+    margin-top: 24px;
+  }
+
+  .chip {
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    padding: 5px 12px;
+    border-radius: 6px;
+    font-size: 12px;
+    font-family: 'JetBrains Mono', monospace;
+    border: 1px solid;
+  }
+
+  .chip.blue  { background: rgba(137,180,250,0.08); border-color: rgba(137,180,250,0.25); color: var(--blue); }
+  .chip.green { background: rgba(166,227,161,0.08); border-color: rgba(166,227,161,0.25); color: var(--green); }
+  .chip.mauve { background: rgba(203,166,247,0.08); border-color: rgba(203,166,247,0.25); color: var(--mauve); }
+  .chip.peach { background: rgba(250,179,135,0.08); border-color: rgba(250,179,135,0.25); color: var(--peach); }
+
+  /* ── SECTIONS ─────────────────────────────────────────── */
+  section {
+    margin-bottom: 72px;
+    scroll-margin-top: 32px;
+  }
+
+  .section-header {
+    display: flex;
+    align-items: baseline;
+    gap: 16px;
+    margin-bottom: 28px;
+    padding-bottom: 12px;
+    border-bottom: 1px solid var(--surface0);
+  }
+
+  .section-num {
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 13px;
+    color: var(--blue);
+    opacity: 0.6;
+  }
+
+  h2 {
+    font-family: 'Space Grotesk', sans-serif;
+    font-weight: 600;
+    font-size: 22px;
+    color: var(--text);
+    letter-spacing: -0.01em;
+  }
+
+  h3 {
+    font-family: 'Space Grotesk', sans-serif;
+    font-weight: 600;
+    font-size: 16px;
+    color: var(--subtext1);
+    margin: 28px 0 12px;
+  }
+
+  p { color: var(--subtext1); margin-bottom: 14px; }
+
+  /* ── CALLOUTS ─────────────────────────────────────────── */
+  .callout {
+    border-radius: 8px;
+    padding: 16px 20px;
+    margin: 20px 0;
+    border-left: 3px solid;
+    display: flex;
+    gap: 14px;
+    align-items: flex-start;
+  }
+
+  .callout-icon { font-size: 18px; flex-shrink: 0; margin-top: 1px; }
+
+  .callout-body { flex: 1; }
+  .callout-title { font-weight: 600; font-size: 13px; margin-bottom: 4px; font-family: 'Space Grotesk', sans-serif; }
+  .callout-text { font-size: 13px; line-height: 1.55; margin: 0; }
+
+  .callout.warn {
+    background: rgba(249,226,175,0.07);
+    border-color: var(--yellow);
+  }
+  .callout.warn .callout-title, .callout.warn .callout-icon { color: var(--yellow); }
+  .callout.warn .callout-text { color: var(--subtext0); }
+
+  .callout.danger {
+    background: rgba(243,139,168,0.07);
+    border-color: var(--red);
+  }
+  .callout.danger .callout-title, .callout.danger .callout-icon { color: var(--red); }
+  .callout.danger .callout-text { color: var(--subtext0); }
+
+  .callout.info {
+    background: rgba(137,180,250,0.07);
+    border-color: var(--blue);
+  }
+  .callout.info .callout-title, .callout.info .callout-icon { color: var(--blue); }
+  .callout.info .callout-text { color: var(--subtext0); }
+
+  .callout.success {
+    background: rgba(166,227,161,0.07);
+    border-color: var(--green);
+  }
+  .callout.success .callout-title, .callout.success .callout-icon { color: var(--green); }
+  .callout.success .callout-text { color: var(--subtext0); }
+
+  /* ── CODE / CREDS ─────────────────────────────────────── */
+  code {
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 13px;
+    background: var(--surface0);
+    color: var(--sky);
+    padding: 2px 7px;
+    border-radius: 4px;
+    border: 1px solid var(--surface1);
+  }
+
+  .creds-box {
+    background: var(--mantle);
+    border: 1px solid var(--surface1);
+    border-radius: 10px;
+    padding: 20px 24px;
+    margin: 20px 0;
+    display: flex;
+    gap: 32px;
+    flex-wrap: wrap;
+  }
+
+  .cred-item { display: flex; flex-direction: column; gap: 4px; }
+  .cred-label {
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 10px;
+    letter-spacing: 0.1em;
+    text-transform: uppercase;
+    color: var(--overlay0);
+  }
+  .cred-value {
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 16px;
+    font-weight: 600;
+    color: var(--blue);
+    letter-spacing: 0.05em;
+  }
+
+  /* ── STEP LIST ────────────────────────────────────────── */
+  .steps { display: flex; flex-direction: column; gap: 2px; margin: 20px 0; }
+
+  .step {
+    display: flex;
+    gap: 16px;
+    align-items: flex-start;
+    padding: 16px 18px;
+    background: var(--mantle);
+    border: 1px solid var(--surface0);
+    border-radius: 8px;
+    transition: border-color 0.15s;
+  }
+
+  .step:hover { border-color: var(--surface1); }
+
+  .step-badge {
+    width: 28px;
+    height: 28px;
+    border-radius: 50%;
+    background: var(--surface0);
+    border: 2px solid var(--surface1);
+    color: var(--blue);
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 12px;
+    font-weight: 600;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    flex-shrink: 0;
+    margin-top: 1px;
+  }
+
+  .step-content { flex: 1; }
+
+  .step-title {
+    font-family: 'Space Grotesk', sans-serif;
+    font-weight: 600;
+    font-size: 14px;
+    color: var(--text);
+    margin-bottom: 4px;
+  }
+
+  .step-desc {
+    font-size: 13px;
+    color: var(--subtext0);
+    line-height: 1.55;
+    margin: 0;
+  }
+
+  /* ── TABLE ────────────────────────────────────────────── */
+  .table-wrap { overflow-x: auto; margin: 20px 0; }
+
+  table {
+    width: 100%;
+    border-collapse: collapse;
+    font-size: 13.5px;
+  }
+
+  th {
+    background: var(--mantle);
+    color: var(--subtext0);
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 11px;
+    letter-spacing: 0.08em;
+    text-transform: uppercase;
+    padding: 10px 14px;
+    text-align: left;
+    border-bottom: 1px solid var(--surface1);
+  }
+
+  td {
+    padding: 10px 14px;
+    border-bottom: 1px solid var(--surface0);
+    color: var(--subtext1);
+    vertical-align: top;
+  }
+
+  tr:hover td { background: rgba(137,180,250,0.03); }
+
+  td:first-child { color: var(--text); font-weight: 500; }
+
+  /* ── CHECKLIST ────────────────────────────────────────── */
+  .checklist {
+    display: flex;
+    flex-direction: column;
+    gap: 6px;
+    margin: 16px 0;
+  }
+
+  .check-item {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    padding: 10px 16px;
+    background: var(--mantle);
+    border: 1px solid var(--surface0);
+    border-radius: 7px;
+    font-size: 13.5px;
+    color: var(--subtext1);
+  }
+
+  .check-item .check-icon { color: var(--green); font-size: 16px; }
+  .check-item .warn-icon  { color: var(--yellow); font-size: 16px; }
+
+  /* ── DRONE DIAGRAM ────────────────────────────────────── */
+  .diagram-wrap {
+    background: var(--mantle);
+    border: 1px solid var(--surface1);
+    border-radius: 12px;
+    padding: 32px;
+    margin: 24px 0;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 20px;
+  }
+
+  .diagram-title {
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 11px;
+    letter-spacing: 0.12em;
+    text-transform: uppercase;
+    color: var(--overlay0);
+  }
+
+  /* ── MODE DIAGRAM ─────────────────────────────────────── */
+  .mode-grid {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 16px;
+    margin: 20px 0;
+  }
+
+  .mode-stick {
+    background: var(--mantle);
+    border: 1px solid var(--surface0);
+    border-radius: 10px;
+    padding: 20px;
+  }
+
+  .stick-label {
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 11px;
+    letter-spacing: 0.08em;
+    text-transform: uppercase;
+    color: var(--overlay0);
+    margin-bottom: 12px;
+  }
+
+  .stick-box {
+    width: 100px;
+    height: 100px;
+    border: 2px solid var(--surface1);
+    border-radius: 12px;
+    position: relative;
+    margin: 0 auto 14px;
+    background: var(--surface0);
+  }
+
+  .stick-dot {
+    width: 16px;
+    height: 16px;
+    background: var(--blue);
+    border-radius: 50%;
+    position: absolute;
+    top: 50%; left: 50%;
+    transform: translate(-50%, -50%);
+    box-shadow: 0 0 8px rgba(137,180,250,0.4);
+  }
+
+  .stick-labels {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 6px;
+    font-size: 12px;
+  }
+
+  .stick-dir {
+    display: flex;
+    align-items: center;
+    gap: 5px;
+    color: var(--subtext0);
+  }
+
+  .stick-dir .arrow { color: var(--blue); font-size: 14px; }
+  .stick-dir .action { color: var(--text); font-size: 11px; font-family: 'JetBrains Mono', monospace; }
+
+  /* ── TROUBLESHOOT ─────────────────────────────────────── */
+  .trouble-item {
+    border: 1px solid var(--surface0);
+    border-radius: 9px;
+    margin-bottom: 10px;
+    overflow: hidden;
+  }
+
+  .trouble-q {
+    padding: 14px 18px;
+    background: var(--mantle);
+    font-weight: 600;
+    font-size: 14px;
+    color: var(--text);
+    cursor: pointer;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+  }
+
+  .trouble-q::after { content: "›"; font-size: 18px; color: var(--blue); transform: rotate(90deg); display: inline-block; }
+
+  .trouble-a {
+    padding: 14px 18px;
+    font-size: 13.5px;
+    color: var(--subtext0);
+    line-height: 1.6;
+    border-top: 1px solid var(--surface0);
+  }
+
+  /* ── SPEC TABLE ───────────────────────────────────────── */
+  .spec-grid {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 10px;
+    margin: 20px 0;
+  }
+
+  .spec-card {
+    background: var(--mantle);
+    border: 1px solid var(--surface0);
+    border-radius: 8px;
+    padding: 14px 16px;
+  }
+
+  .spec-key {
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 10px;
+    letter-spacing: 0.1em;
+    text-transform: uppercase;
+    color: var(--overlay0);
+    margin-bottom: 4px;
+  }
+
+  .spec-val {
+    font-size: 14px;
+    color: var(--text);
+    font-weight: 500;
+  }
+
+  /* ── TAG BADGE ────────────────────────────────────────── */
+  .tag {
+    display: inline-block;
+    padding: 2px 8px;
+    border-radius: 4px;
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 11px;
+    margin-left: 6px;
+  }
+
+  .tag.cw  { background: rgba(137,220,235,0.12); color: var(--sky); border: 1px solid rgba(137,220,235,0.3); }
+  .tag.ccw { background: rgba(166,227,161,0.12); color: var(--green); border: 1px solid rgba(166,227,161,0.3); }
+
+  /* ── PROPELLER SVG COLOURS ───────────── */
+  .svg-ccw-fill { fill: rgba(166,227,161,0.15); stroke: #a6e3a1; }
+  .svg-cw-fill  { fill: rgba(137,220,235,0.15); stroke: #89dceb; }
+
+  ul, ol {
+    padding-left: 20px;
+    color: var(--subtext1);
+    font-size: 14px;
+  }
+
+  li { margin-bottom: 6px; }
+
+  /* ── FOOTER ───────────────────────────────────────────── */
+  footer {
+    margin-top: 80px;
+    padding-top: 24px;
+    border-top: 1px solid var(--surface0);
+    font-size: 12px;
+    color: var(--overlay0);
+    font-family: 'JetBrains Mono', monospace;
+    display: flex;
+    justify-content: space-between;
+    flex-wrap: wrap;
+    gap: 8px;
+  }
+
+  @media (max-width: 768px) {
+    .sidebar { display: none; }
+    main { margin-left: 0; padding: 32px 20px 60px; }
+    .spec-grid, .mode-grid { grid-template-columns: 1fr; }
+  }
+</style>
+</head>
+<body>
+
+<!-- ╔═══════════════════════════════════╗ -->
+<!-- ║           SIDEBAR NAV             ║ -->
+<!-- ╚═══════════════════════════════════╝ -->
+<aside class="sidebar">
+  <div class="sidebar-logo">
+    <div class="drone-name">ESP32-Drone V2.0</div>
+    <div class="doc-title">// full setup guide</div>
+  </div>
+  <nav>
+    <div class="section-label">Getting Started</div>
+    <a href="#overview"><span class="step-num">01</span> Overview</a>
+    <a href="#whats-in-box"><span class="step-num">02</span> What's in the Box</a>
+    <a href="#assembly"><span class="step-num">03</span> Assembly</a>
+
+    <div class="section-label">Software</div>
+    <a href="#app-install"><span class="step-num">04</span> iPhone App</a>
+    <a href="#wifi-connect"><span class="step-num">05</span> WiFi Connection</a>
+    <a href="#first-flight"><span class="step-num">06</span> First Flight</a>
+
+    <div class="section-label">Reference</div>
+    <a href="#flight-modes"><span class="step-num">07</span> Flight Modes</a>
+    <a href="#controls"><span class="step-num">08</span> Controls Guide</a>
+    <a href="#preflight"><span class="step-num">09</span> Pre-flight Checklist</a>
+    <a href="#troubleshoot"><span class="step-num">10</span> Troubleshooting</a>
+    <a href="#advanced"><span class="step-num">11</span> Advanced / Dev</a>
+  </nav>
+</aside>
+
+<!-- ╔═══════════════════════════════════╗ -->
+<!-- ║              MAIN                 ║ -->
+<!-- ╚═══════════════════════════════════╝ -->
+<main>
+
+  <!-- HERO -->
+  <div class="hero">
+    <div class="hero-eyebrow">Angeltoy · AliExpress Build</div>
+    <h1>ESP32-Drone <span>V2.0</span><br>Setup Guide</h1>
+    <p class="hero-desc">
+      Complete documentation for assembling, connecting, and flying your open-source ESP32-S2 WiFi quadcopter via iPhone. No RC transmitter needed — this drone flies over its own WiFi hotspot.
+    </p>
+    <div class="hero-chips">
+      <span class="chip blue">ESP32-S2 WiFi</span>
+      <span class="chip green">iOS App Control</span>
+      <span class="chip mauve">Open Source Firmware</span>
+      <span class="chip green">Battery Included</span>
+    </div>
+  </div>
+
+  <!-- ─────────────────────────────────────── -->
+  <!-- 01 OVERVIEW                             -->
+  <!-- ─────────────────────────────────────── -->
+  <section id="overview">
+    <div class="section-header">
+      <span class="section-num">01</span>
+      <h2>Product Overview</h2>
+    </div>
+
+    <p>
+      The Angeltoy ESP32-Drone V2.0 is a miniature open-source quadcopter built around Espressif's
+      <strong>ESP32-S2</strong> microcontroller. It runs the official
+      <em>ESP-Drone</em> firmware — an open-source project ported from the
+      Bitcraze Crazyflie platform — and communicates entirely over <strong>2.4 GHz WiFi</strong>.
+      Your iPhone connects to the drone's WiFi hotspot and sends real-time flight commands
+      through the ESP-Drone app. No RC transmitter, no pairing dongles.
+    </p>
+
+    <p>
+      The V2.0 board ships with firmware pre-flashed. For basic flight, you only
+      need to install motors, install propellers, and attach a battery.
+    </p>
+
+    <div class="spec-grid">
+      <div class="spec-card">
+        <div class="spec-key">Flight Controller</div>
+        <div class="spec-val">ESP32-S2-WROVER</div>
+      </div>
+      <div class="spec-card">
+        <div class="spec-key">IMU Sensor</div>
+        <div class="spec-val">MPU-6050 (6-axis)</div>
+      </div>
+      <div class="spec-card">
+        <div class="spec-key">Control Link</div>
+        <div class="spec-val">802.11 b/g/n WiFi (2.4 GHz)</div>
+      </div>
+      <div class="spec-card">
+        <div class="spec-key">Battery</div>
+        <div class="spec-val">300 mAh 1S LiPo (3.7 V) — included</div>
+      </div>
+      <div class="spec-card">
+        <div class="spec-key">Firmware</div>
+        <div class="spec-val">ESP-Drone (Crazyflie port, pre-flashed)</div>
+      </div>
+      <div class="spec-card">
+        <div class="spec-key">App Platform</div>
+        <div class="spec-val">iOS &amp; Android</div>
+      </div>
+      <div class="spec-card">
+        <div class="spec-key">Open Source</div>
+        <div class="spec-val">GPL 3.0 · github.com/espressif/esp-drone</div>
+      </div>
+      <div class="spec-card">
+        <div class="spec-key">Default WiFi SSID</div>
+        <div class="spec-val">ESP-DRONE_XXXX</div>
+      </div>
+    </div>
+  </section>
+
+  <!-- ─────────────────────────────────────── -->
+  <!-- 02 WHAT'S IN THE BOX                    -->
+  <!-- ─────────────────────────────────────── -->
+  <section id="whats-in-box">
+    <div class="section-header">
+      <span class="section-num">02</span>
+      <h2>What's in the Box &amp; What You Need</h2>
+    </div>
+
+    <h3>Included in Package</h3>
+    <div class="table-wrap">
+      <table>
+        <thead>
+          <tr><th>Item</th><th>Qty</th><th>Notes</th></tr>
+        </thead>
+        <tbody>
+          <tr><td>ESP32-S2 main flight board (V2.0)</td><td>1</td><td>Firmware pre-flashed</td></tr>
+          <tr><td>Coreless motors</td><td>4</td><td>2× CW, 2× CCW</td></tr>
+          <tr><td>Propellers</td><td>4+ (spares)</td><td>2× Type A (CCW), 2× Type B (CW)</td></tr>
+          <tr><td>300 mAh 1S LiPo battery (JST 1.25 mm)</td><td>1</td><td>3.7 V — included with your variant</td></tr>
+          <tr><td>USB LiPo charger</td><td>1</td><td>Check if included — verify in your package</td></tr>
+        </tbody>
+      </table>
+    </div>
+
+    <h3>You'll Also Need</h3>
+    <div class="table-wrap">
+      <table>
+        <thead>
+          <tr><th>Item</th><th>Why</th></tr>
+        </thead>
+        <tbody>
+          <tr><td>1S LiPo USB charger</td><td>Charge the battery safely — check if one was included in your package</td></tr>
+          <tr><td>iPhone running iOS 14+</td><td>ESP-Drone app control</td></tr>
+          <tr><td>Small Phillips screwdriver (optional)</td><td>Some variants need prop screws</td></tr>
+        </tbody>
+      </table>
+    </div>
+
+    <div class="callout warn">
+      <span class="callout-icon">⚡</span>
+      <div class="callout-body">
+        <div class="callout-title">Use a Proper 1S LiPo Charger</div>
+        <p class="callout-text">
+          Your package may include a USB charger — if not, pick up a dedicated 1S LiPo USB charger (search "1S LiPo USB charger JST 1.25").
+          Never charge a LiPo on a generic USB power bank or a charger not rated for LiPo chemistry.
+          LiPo batteries can catch fire if overcharged or charged with the wrong charger.
+        </p>
+      </div>
+    </div>
+  </section>
+
+  <!-- ─────────────────────────────────────── -->
+  <!-- 03 ASSEMBLY                             -->
+  <!-- ─────────────────────────────────────── -->
+  <section id="assembly">
+    <div class="section-header">
+      <span class="section-num">03</span>
+      <h2>Hardware Assembly</h2>
+    </div>
+
+    <p>Assembly is straightforward — no soldering required for V2.0. The motors press-fit into the motor mounts on the PCB frame. The most critical part is getting the propeller directions correct.</p>
+
+    <!-- DRONE DIAGRAM -->
+    <div class="diagram-wrap">
+      <div class="diagram-title">Top-Down View — Motor Positions &amp; Rotation Directions</div>
+      <svg viewBox="0 0 400 380" width="340" xmlns="http://www.w3.org/2000/svg" style="overflow:visible">
+        <!-- Arms -->
+        <line x1="200" y1="190" x2="95"  y2="90"  stroke="#45475a" stroke-width="12" stroke-linecap="round"/>
+        <line x1="200" y1="190" x2="305" y2="90"  stroke="#45475a" stroke-width="12" stroke-linecap="round"/>
+        <line x1="200" y1="190" x2="95"  y2="290" stroke="#45475a" stroke-width="12" stroke-linecap="round"/>
+        <line x1="200" y1="190" x2="305" y2="290" stroke="#45475a" stroke-width="12" stroke-linecap="round"/>
+        <!-- Centre board -->
+        <rect x="168" y="158" width="64" height="64" rx="10" fill="#313244" stroke="#585b70" stroke-width="1.5"/>
+        <text x="200" y="191" text-anchor="middle" font-family="JetBrains Mono, monospace" font-size="10" fill="#89b4fa" font-weight="600">ESP32</text>
+        <text x="200" y="203" text-anchor="middle" font-family="JetBrains Mono, monospace" font-size="9" fill="#6c7086">S2</text>
+
+        <!-- FRONT marker -->
+        <text x="200" y="50" text-anchor="middle" font-family="JetBrains Mono, monospace" font-size="10" fill="#6c7086" letter-spacing="3">FRONT ▲</text>
+        <!-- REAR marker -->
+        <text x="200" y="348" text-anchor="middle" font-family="JetBrains Mono, monospace" font-size="10" fill="#6c7086" letter-spacing="3">▼ REAR</text>
+
+        <!-- M1 — Front-Left — CCW (green) -->
+        <circle cx="95" cy="90" r="34" fill="rgba(166,227,161,0.12)" stroke="#a6e3a1" stroke-width="1.5"/>
+        <path d="M 70 72 A 30 30 0 1 0 113 68" fill="none" stroke="#a6e3a1" stroke-width="2" marker-end="url(#arrowCCW)"/>
+        <text x="95" y="86" text-anchor="middle" font-family="JetBrains Mono, monospace" font-size="11" fill="#a6e3a1" font-weight="700">M1</text>
+        <text x="95" y="99" text-anchor="middle" font-family="JetBrains Mono, monospace" font-size="9" fill="#a6e3a1">CCW</text>
+        <text x="40" y="75" font-family="Inter, sans-serif" font-size="11" fill="#585b70">Front-Left</text>
+
+        <!-- M2 — Front-Right — CW (sky) -->
+        <circle cx="305" cy="90" r="34" fill="rgba(137,220,235,0.12)" stroke="#89dceb" stroke-width="1.5"/>
+        <path d="M 330 72 A 30 30 0 1 1 287 68" fill="none" stroke="#89dceb" stroke-width="2" marker-end="url(#arrowCW)"/>
+        <text x="305" y="86" text-anchor="middle" font-family="JetBrains Mono, monospace" font-size="11" fill="#89dceb" font-weight="700">M2</text>
+        <text x="305" y="99" text-anchor="middle" font-family="JetBrains Mono, monospace" font-size="9" fill="#89dceb">CW</text>
+        <text x="315" y="75" font-family="Inter, sans-serif" font-size="11" fill="#585b70">Front-Right</text>
+
+        <!-- M3 — Back-Left — CW (sky) -->
+        <circle cx="95" cy="290" r="34" fill="rgba(137,220,235,0.12)" stroke="#89dceb" stroke-width="1.5"/>
+        <path d="M 70 308 A 30 30 0 1 1 113 312" fill="none" stroke="#89dceb" stroke-width="2" marker-end="url(#arrowCW)"/>
+        <text x="95" y="286" text-anchor="middle" font-family="JetBrains Mono, monospace" font-size="11" fill="#89dceb" font-weight="700">M3</text>
+        <text x="95" y="299" text-anchor="middle" font-family="JetBrains Mono, monospace" font-size="9" fill="#89dceb">CW</text>
+        <text x="40" y="315" font-family="Inter, sans-serif" font-size="11" fill="#585b70">Back-Left</text>
+
+        <!-- M4 — Back-Right — CCW (green) -->
+        <circle cx="305" cy="290" r="34" fill="rgba(166,227,161,0.12)" stroke="#a6e3a1" stroke-width="1.5"/>
+        <path d="M 330 308 A 30 30 0 1 0 287 312" fill="none" stroke="#a6e3a1" stroke-width="2" marker-end="url(#arrowCCW)"/>
+        <text x="305" y="286" text-anchor="middle" font-family="JetBrains Mono, monospace" font-size="11" fill="#a6e3a1" font-weight="700">M4</text>
+        <text x="305" y="299" text-anchor="middle" font-family="JetBrains Mono, monospace" font-size="9" fill="#a6e3a1">CCW</text>
+        <text x="315" y="315" font-family="Inter, sans-serif" font-size="11" fill="#585b70">Back-Right</text>
+
+        <!-- Arrow markers -->
+        <defs>
+          <marker id="arrowCCW" markerWidth="8" markerHeight="8" refX="4" refY="4" orient="auto">
+            <path d="M0,0 L8,4 L0,8 Z" fill="#a6e3a1"/>
+          </marker>
+          <marker id="arrowCW" markerWidth="8" markerHeight="8" refX="4" refY="4" orient="auto">
+            <path d="M0,0 L8,4 L0,8 Z" fill="#89dceb"/>
+          </marker>
+        </defs>
+      </svg>
+
+      <!-- Legend -->
+      <div style="display:flex;gap:24px;margin-top:4px;">
+        <div style="display:flex;align-items:center;gap:8px;font-size:12px;color:#a6adc8;font-family:'JetBrains Mono',monospace;">
+          <span style="width:12px;height:12px;border-radius:50%;background:rgba(166,227,161,0.2);border:1.5px solid #a6e3a1;display:inline-block;"></span>
+          CCW — Counter-clockwise (Type A prop)
+        </div>
+        <div style="display:flex;align-items:center;gap:8px;font-size:12px;color:#a6adc8;font-family:'JetBrains Mono',monospace;">
+          <span style="width:12px;height:12px;border-radius:50%;background:rgba(137,220,235,0.2);border:1.5px solid #89dceb;display:inline-block;"></span>
+          CW — Clockwise (Type B prop)
+        </div>
+      </div>
+    </div>
+
+    <h3>Step-by-Step Assembly</h3>
+    <div class="steps">
+      <div class="step">
+        <div class="step-badge">1</div>
+        <div class="step-content">
+          <div class="step-title">Inspect the board</div>
+          <p class="step-desc">Lay the PCB flat. Identify the four motor mount sockets in the corners — they are labeled M1, M2, M3, M4 directly on the silkscreen. Confirm the FRONT side (usually marked on the PCB with an arrow or "FRONT" text).</p>
+        </div>
+      </div>
+      <div class="step">
+        <div class="step-badge">2</div>
+        <div class="step-content">
+          <div class="step-title">Press-fit the motors</div>
+          <p class="step-desc">Push each motor into its corresponding socket. The motor shaft points upward. Motors are typically color-coded — check if red motors go on M1/M4 (CCW) and blue/black on M2/M3 (CW), but verify against the board's labels. Route the motor wires through the arm channel if provided.</p>
+        </div>
+      </div>
+      <div class="step">
+        <div class="step-badge">3</div>
+        <div class="step-content">
+          <div class="step-title">Identify your propellers</div>
+          <p class="step-desc">Propellers are marked <strong>Type A</strong> (or "A" stamped on the hub) for CCW rotation, and <strong>Type B</strong> (or "B") for CW rotation. Check the text molded into the blade hub. Do NOT skip this step — reversed props cause a crash on first takeoff.</p>
+        </div>
+      </div>
+      <div class="step">
+        <div class="step-badge">4</div>
+        <div class="step-content">
+          <div class="step-title">Install propellers in the correct positions</div>
+          <p class="step-desc">
+            Using the diagram above:<br>
+            <strong>M1 (front-left)</strong> → <span class="tag ccw">Type A / CCW</span><br>
+            <strong>M2 (front-right)</strong> → <span class="tag cw">Type B / CW</span><br>
+            <strong>M3 (back-left)</strong> → <span class="tag cw">Type B / CW</span><br>
+            <strong>M4 (back-right)</strong> → <span class="tag ccw">Type A / CCW</span><br><br>
+            Press each prop firmly onto the motor shaft until it clicks or seats fully. If they use tiny screws, tighten gently — don't overtighten.
+          </p>
+        </div>
+      </div>
+      <div class="step">
+        <div class="step-badge">5</div>
+        <div class="step-content">
+          <div class="step-title">Verify propeller pitch (quick visual check)</div>
+          <p class="step-desc">Hold the drone at eye level. A CCW propeller's leading edge (thicker edge) curves to the left when viewed from above. A CW propeller's leading edge curves to the right. Confirm this matches the motor positions before proceeding.</p>
+        </div>
+      </div>
+      <div class="step">
+        <div class="step-badge">6</div>
+        <div class="step-content">
+          <div class="step-title">Attach the battery</div>
+          <p class="step-desc">Connect your 300 mAh 1S LiPo to the JST 1.25 mm connector on the board. The connector is polarized — it only fits one way. Do NOT force it. Tuck the battery into the battery bay (usually on the underside of the PCB). A small piece of foam or velcro holds it securely during flight.</p>
+        </div>
+      </div>
+    </div>
+
+    <div class="callout danger">
+      <span class="callout-icon">🚨</span>
+      <div class="callout-body">
+        <div class="callout-title">Wrong Propeller Direction = Instant Crash</div>
+        <p class="callout-text">
+          Propeller direction is the #1 assembly mistake. If even one prop is reversed, the drone
+          will flip immediately on takeoff and potentially break props or motors. Double-check
+          every position against the diagram before your first flight.
+        </p>
+      </div>
+    </div>
+  </section>
+
+  <!-- ─────────────────────────────────────── -->
+  <!-- 04 APP INSTALL                          -->
+  <!-- ─────────────────────────────────────── -->
+  <section id="app-install">
+    <div class="section-header">
+      <span class="section-num">04</span>
+      <h2>iPhone App Installation</h2>
+    </div>
+
+    <p>The drone is controlled using the official <strong>ESP-Drone</strong> app by Espressif Systems. It's free on the App Store.</p>
+
+    <div class="steps">
+      <div class="step">
+        <div class="step-badge">1</div>
+        <div class="step-content">
+          <div class="step-title">Open App Store on your iPhone</div>
+          <p class="step-desc">Tap the App Store icon. Make sure you're connected to the internet (not the drone's WiFi yet).</p>
+        </div>
+      </div>
+      <div class="step">
+        <div class="step-badge">2</div>
+        <div class="step-content">
+          <div class="step-title">Search "ESP-Drone"</div>
+          <p class="step-desc">In the search tab, type <code>ESP-Drone</code>. Look for the app published by <strong>Espressif Systems (Shanghai) Co., Ltd.</strong> — the official publisher. It has a blue/teal drone icon.</p>
+        </div>
+      </div>
+      <div class="step">
+        <div class="step-badge">3</div>
+        <div class="step-content">
+          <div class="step-title">Download and install</div>
+          <p class="step-desc">Tap Get → install. The app is free, roughly 10–20 MB. It requires iOS 14 or later.</p>
+        </div>
+      </div>
+      <div class="step">
+        <div class="step-badge">4</div>
+        <div class="step-content">
+          <div class="step-title">Allow Local Network access</div>
+          <p class="step-desc">On first launch, iOS will ask if ESP-Drone can access devices on your local network. Tap <strong>Allow</strong> — this is required for the UDP communication between your iPhone and the drone.</p>
+        </div>
+      </div>
+    </div>
+
+    <div class="callout info">
+      <span class="callout-icon">ℹ️</span>
+      <div class="callout-body">
+        <div class="callout-title">App Source Code</div>
+        <p class="callout-text">The iOS app is fully open source: <code>github.com/EspressifApps/ESP-Drone-iOS</code>. If you want to modify the app or build it yourself, clone that repo and open in Xcode.</p>
+      </div>
+    </div>
+  </section>
+
+  <!-- ─────────────────────────────────────── -->
+  <!-- 05 WIFI CONNECTION                      -->
+  <!-- ─────────────────────────────────────── -->
+  <section id="wifi-connect">
+    <div class="section-header">
+      <span class="section-num">05</span>
+      <h2>Connecting via WiFi</h2>
+    </div>
+
+    <p>The drone acts as a <strong>WiFi Access Point (AP)</strong>. Your iPhone connects to the drone's network directly — not your home router. The drone creates its own hotspot when powered on.</p>
+
+    <h3>WiFi Credentials</h3>
+    <div class="creds-box">
+      <div class="cred-item">
+        <span class="cred-label">SSID (Network Name)</span>
+        <span class="cred-value">ESP-DRONE_XXXX</span>
+      </div>
+      <div class="cred-item">
+        <span class="cred-label">Password</span>
+        <span class="cred-value">12345678</span>
+      </div>
+      <div class="cred-item">
+        <span class="cred-label">Security</span>
+        <span class="cred-value">WPA2</span>
+      </div>
+    </div>
+
+    <p><em>XXXX</em> in the SSID is the last four characters of the drone's MAC address. Example: <code>ESP-DRONE_A3F2</code>. It will be unique to your board.</p>
+
+    <div class="steps">
+      <div class="step">
+        <div class="step-badge">1</div>
+        <div class="step-content">
+          <div class="step-title">Power on the drone</div>
+          <p class="step-desc">Connect the battery (if not already). The blue LED on the board should blink, indicating the firmware is running and the WiFi AP is active. Give it 3–5 seconds to fully initialise.</p>
+        </div>
+      </div>
+      <div class="step">
+        <div class="step-badge">2</div>
+        <div class="step-content">
+          <div class="step-title">Connect iPhone to the drone's WiFi</div>
+          <p class="step-desc">Go to <strong>Settings → WiFi</strong> on your iPhone. You'll see a network starting with <code>ESP-DRONE_</code>. Tap it, enter password <code>12345678</code>, and connect. Your iPhone will show "No Internet Connection" — this is normal. The drone provides WiFi, not internet.</p>
+        </div>
+      </div>
+      <div class="step">
+        <div class="step-badge">3</div>
+        <div class="step-content">
+          <div class="step-title">Keep WiFi connected</div>
+          <p class="step-desc">iOS may ask "Keep using this network?" because it has no internet. Tap <strong>"Use Without Internet"</strong> or <strong>"Keep"</strong> to stay connected to the drone. Do not switch to your home WiFi during flight.</p>
+        </div>
+      </div>
+      <div class="step">
+        <div class="step-badge">4</div>
+        <div class="step-content">
+          <div class="step-title">Open the ESP-Drone app</div>
+          <p class="step-desc">Launch the ESP-Drone app. It will automatically detect the drone on the network and show the connection status. A green indicator or "Connected" status means you're ready.</p>
+        </div>
+      </div>
+    </div>
+
+    <div class="callout warn">
+      <span class="callout-icon">📡</span>
+      <div class="callout-body">
+        <div class="callout-title">WiFi Range is Short (~10–15 metres)</div>
+        <p class="callout-text">
+          The ESP32-S2's WiFi range in AP mode is limited to roughly 10–15 metres in open space — less through walls. Stay within this range while flying. Flying too far causes the app to lose connection and the drone will hover or descend.
+        </p>
+      </div>
+    </div>
+  </section>
+
+  <!-- ─────────────────────────────────────── -->
+  <!-- 06 FIRST FLIGHT                         -->
+  <!-- ─────────────────────────────────────── -->
+  <section id="first-flight">
+    <div class="section-header">
+      <span class="section-num">06</span>
+      <h2>First Flight</h2>
+    </div>
+
+    <div class="callout warn">
+      <span class="callout-icon">🏠</span>
+      <div class="callout-body">
+        <div class="callout-title">Fly Indoors First</div>
+        <p class="callout-text">
+          For your first flight, choose a large indoor space with no ceiling fans and clear floor area.
+          This drone has no GPS — outdoors it will drift with any wind. Master hovering indoors first.
+        </p>
+      </div>
+    </div>
+
+    <div class="steps">
+      <div class="step">
+        <div class="step-badge">1</div>
+        <div class="step-content">
+          <div class="step-title">Place drone on a flat surface, FRONT facing away from you</div>
+          <p class="step-desc">Orientation matters. The FRONT of the drone should point away. In Mode 2, pushing the right stick forward (pitch) moves the drone away from you. If the drone is backwards, your controls will feel inverted.</p>
+        </div>
+      </div>
+      <div class="step">
+        <div class="step-badge">2</div>
+        <div class="step-content">
+          <div class="step-title">Open the app, confirm connection</div>
+          <p class="step-desc">You should see green/active status. Check that your iPhone is still connected to <code>ESP-DRONE_XXXX</code> WiFi.</p>
+        </div>
+      </div>
+      <div class="step">
+        <div class="step-badge">3</div>
+        <div class="step-content">
+          <div class="step-title">Arm the motors (throttle down + yaw right)</div>
+          <p class="step-desc">In the app, push the <strong>left stick</strong> fully down and to the right simultaneously for ~2 seconds. The motors should start to spin slowly — this indicates the drone is armed and ready to fly. Stand clear of the propellers.</p>
+        </div>
+      </div>
+      <div class="step">
+        <div class="step-badge">4</div>
+        <div class="step-content">
+          <div class="step-title">Slowly raise the left stick to take off</div>
+          <p class="step-desc">Gradually push the left stick (Throttle) upward from the bottom. The drone will lift at roughly 50–60% throttle. Use small, gentle inputs. Hovering requires constant small corrections with the right stick (Pitch/Roll).</p>
+        </div>
+      </div>
+      <div class="step">
+        <div class="step-badge">5</div>
+        <div class="step-content">
+          <div class="step-title">Land: reduce throttle slowly</div>
+          <p class="step-desc">Gently lower the left stick. As the drone descends and touches down, push the left stick fully down to disarm the motors. The props will stop spinning.</p>
+        </div>
+      </div>
+    </div>
+
+    <div class="callout info">
+      <span class="callout-icon">🔋</span>
+      <div class="callout-body">
+        <div class="callout-title">Flight Time</div>
+        <p class="callout-text">
+          A 300 mAh 1S battery typically gives <strong>3–5 minutes</strong> of flight. The board has low-battery detection — the LED will flash faster when the battery is low. Land immediately when you see this. Flying on a depleted LiPo damages the battery permanently.
+        </p>
+      </div>
+    </div>
+  </section>
+
+  <!-- ─────────────────────────────────────── -->
+  <!-- 07 FLIGHT MODES                         -->
+  <!-- ─────────────────────────────────────── -->
+  <section id="flight-modes">
+    <div class="section-header">
+      <span class="section-num">07</span>
+      <h2>Flight Modes</h2>
+    </div>
+
+    <p>ESP-Drone supports three flight modes. The V2.0 board supports Stabilise mode out of the box. Height-hold and Position-hold require optional expansion boards (sold separately).</p>
+
+    <div class="table-wrap">
+      <table>
+        <thead>
+          <tr><th>Mode</th><th>Description</th><th>Hardware Required</th><th>Available on V2.0?</th></tr>
+        </thead>
+        <tbody>
+          <tr>
+            <td>Stabilise</td>
+            <td>Keeps the drone level using the IMU (gyroscope + accelerometer). You control throttle, pitch, roll, and yaw manually.</td>
+            <td>Main board only (MPU-6050)</td>
+            <td style="color: #a6e3a1; font-weight: 600;">✓ Yes — default</td>
+          </tr>
+          <tr>
+            <td>Height-hold</td>
+            <td>Automatically maintains altitude at a set height. Useful for beginners. Throttle stick controls altitude target, not direct thrust.</td>
+            <td>MS5611 barometric pressure module (ext. board)</td>
+            <td style="color: #f9e2af;">Optional add-on</td>
+          </tr>
+          <tr>
+            <td>Position-hold</td>
+            <td>Holds X/Y position as well as altitude. Drone hovers in place without drifting — great for photography.</td>
+            <td>PMW3901 optical flow + VL53L1X ToF sensor (ext. board)</td>
+            <td style="color: #f9e2af;">Optional add-on</td>
+          </tr>
+        </tbody>
+      </table>
+    </div>
+
+    <div class="callout info">
+      <span class="callout-icon">🔁</span>
+      <div class="callout-body">
+        <div class="callout-title">Switching Flight Modes in the App</div>
+        <p class="callout-text">
+          In the ESP-Drone app, a mode toggle button switches between available flight modes. If you only have the base board, only Stabilise mode will work. Attempting Height-hold without the barometer board will result in unstable altitude behaviour.
+        </p>
+      </div>
+    </div>
+  </section>
+
+  <!-- ─────────────────────────────────────── -->
+  <!-- 08 CONTROLS                             -->
+  <!-- ─────────────────────────────────────── -->
+  <section id="controls">
+    <div class="section-header">
+      <span class="section-num">08</span>
+      <h2>Controls Reference (Mode 2)</h2>
+    </div>
+
+    <p>The app defaults to <strong>Mode 2</strong>, which is the standard RC transmitter layout used by most hobbyists worldwide. Both sticks are virtual on the touchscreen.</p>
+
+    <div class="mode-grid">
+      <div class="mode-stick">
+        <div class="stick-label">Left Stick</div>
+        <div class="stick-box"><div class="stick-dot"></div></div>
+        <div class="stick-labels">
+          <div class="stick-dir"><span class="arrow">↑</span><span class="action">Throttle ↑<br><small style="color:var(--overlay0)">climb</small></span></div>
+          <div class="stick-dir"><span class="arrow">↓</span><span class="action">Throttle ↓<br><small style="color:var(--overlay0)">descend</small></span></div>
+          <div class="stick-dir"><span class="arrow">←</span><span class="action">Yaw Left<br><small style="color:var(--overlay0)">rotate CCW</small></span></div>
+          <div class="stick-dir"><span class="arrow">→</span><span class="action">Yaw Right<br><small style="color:var(--overlay0)">rotate CW</small></span></div>
+        </div>
+      </div>
+      <div class="mode-stick">
+        <div class="stick-label">Right Stick</div>
+        <div class="stick-box"><div class="stick-dot" style="background:var(--mauve);box-shadow:0 0 8px rgba(203,166,247,0.4)"></div></div>
+        <div class="stick-labels">
+          <div class="stick-dir"><span class="arrow" style="color:var(--mauve)">↑</span><span class="action">Pitch Fwd<br><small style="color:var(--overlay0)">fly forward</small></span></div>
+          <div class="stick-dir"><span class="arrow" style="color:var(--mauve)">↓</span><span class="action">Pitch Back<br><small style="color:var(--overlay0)">fly backward</small></span></div>
+          <div class="stick-dir"><span class="arrow" style="color:var(--mauve)">←</span><span class="action">Roll Left<br><small style="color:var(--overlay0)">fly left</small></span></div>
+          <div class="stick-dir"><span class="arrow" style="color:var(--mauve)">→</span><span class="action">Roll Right<br><small style="color:var(--overlay0)">fly right</small></span></div>
+        </div>
+      </div>
+    </div>
+
+    <h3>Default App Settings</h3>
+    <div class="table-wrap">
+      <table>
+        <thead>
+          <tr><th>Setting</th><th>Default Value</th><th>Notes</th></tr>
+        </thead>
+        <tbody>
+          <tr><td>Control Mode</td><td>Mode 2</td><td>Left stick = throttle/yaw, right = pitch/roll</td></tr>
+          <tr><td>Deadzone</td><td>0.2</td><td>Stick range before input registers. Increase if drone drifts on idle sticks.</td></tr>
+          <tr><td>Roll Trim</td><td>0.0°</td><td>Adjust if drone drifts left/right on hover</td></tr>
+          <tr><td>Pitch Trim</td><td>0.0°</td><td>Adjust if drone drifts forward/backward on hover</td></tr>
+          <tr><td>Max Roll/Pitch</td><td>~20°</td><td>Max tilt angle — limits top speed</td></tr>
+        </tbody>
+      </table>
+    </div>
+
+    <div class="callout info">
+      <span class="callout-icon">⚙️</span>
+      <div class="callout-body">
+        <div class="callout-title">Tuning Trim for Hover Drift</div>
+        <p class="callout-text">
+          If the drone drifts forward when hovering with sticks centred, increase the Pitch Trim
+          slightly in a negative direction. If it drifts right, adjust Roll Trim negative. Small
+          increments of 0.5° at a time. This is normal — small manufacturing variations in motor
+          placement cause slight imbalances.
+        </p>
+      </div>
+    </div>
+  </section>
+
+  <!-- ─────────────────────────────────────── -->
+  <!-- 09 PRE-FLIGHT CHECKLIST                 -->
+  <!-- ─────────────────────────────────────── -->
+  <section id="preflight">
+    <div class="section-header">
+      <span class="section-num">09</span>
+      <h2>Pre-flight Checklist</h2>
+    </div>
+
+    <p>Run through this before every flight session.</p>
+
+    <div class="checklist">
+      <div class="check-item"><span class="check-icon">✓</span> All 4 propellers are firmly seated — no wobble, no looseness</div>
+      <div class="check-item"><span class="check-icon">✓</span> Propeller directions match the diagram (CCW on M1/M4, CW on M2/M3)</div>
+      <div class="check-item"><span class="check-icon">✓</span> Battery is fully charged (check your charger's indicator light)</div>
+      <div class="check-item"><span class="check-icon">✓</span> Battery connector is fully seated — not loose or partially disconnected</div>
+      <div class="check-item"><span class="check-icon">✓</span> Battery is secured to the frame — won't shift during flight</div>
+      <div class="check-item"><span class="check-icon">✓</span> iPhone is connected to ESP-DRONE_XXXX WiFi</div>
+      <div class="check-item"><span class="check-icon">✓</span> App shows connection established (green status)</div>
+      <div class="check-item"><span class="check-icon">✓</span> Drone is on a flat surface, FRONT facing away</div>
+      <div class="check-item"><span class="check-icon">✓</span> Flying area is clear of obstacles within 2 metres</div>
+      <div class="check-item warn-icon"><span class="warn-icon">⚠</span> No ceiling fans, loose cables, or pets in the flight area</div>
+      <div class="check-item warn-icon"><span class="warn-icon">⚠</span> Battery has not been flown in the last 10 minutes (LiPo needs to cool)</div>
+    </div>
+  </section>
+
+  <!-- ─────────────────────────────────────── -->
+  <!-- 10 TROUBLESHOOTING                      -->
+  <!-- ─────────────────────────────────────── -->
+  <section id="troubleshoot">
+    <div class="section-header">
+      <span class="section-num">10</span>
+      <h2>Troubleshooting</h2>
+    </div>
+
+    <div class="trouble-item">
+      <div class="trouble-q">Drone flips immediately on takeoff</div>
+      <div class="trouble-a">
+        Almost certainly a reversed propeller. Power off immediately. Re-check every prop position against the diagram in Section 3. The most common mistake is swapping Type A (CCW) and Type B (CW) props. Also confirm the motors themselves spin the correct direction by briefly powering the drone on a bench and observing which way each motor turns before props are installed.
+      </div>
+    </div>
+
+    <div class="trouble-item">
+      <div class="trouble-q">I can't find ESP-DRONE_XXXX in my WiFi list</div>
+      <div class="trouble-a">
+        Check that the battery is connected and the board's LED is blinking (not solid or off). If the LED is off, the board isn't powered — check the battery connector. If the LED is solid, the firmware may have crashed — disconnect and reconnect the battery to reboot. Wait 5–10 seconds after power-on before scanning WiFi. Move your iPhone closer to the drone when scanning.
+      </div>
+    </div>
+
+    <div class="trouble-item">
+      <div class="trouble-q">App connects but controls don't respond / drone doesn't arm</div>
+      <div class="trouble-a">
+        Make sure you performed the arm gesture correctly: left stick fully down-and-right for ~2 seconds. Check that iOS didn't switch you back to your home WiFi network in the background — this happens when iOS decides the drone's network "has no internet". Go to Settings → WiFi, confirm you're still on ESP-DRONE_XXXX. Also try enabling Airplane Mode + WiFi only to prevent iOS from auto-switching.
+      </div>
+    </div>
+
+    <div class="trouble-item">
+      <div class="trouble-q">Drone drifts badly in one direction when hovering</div>
+      <div class="trouble-a">
+        Some drift is normal without position-hold mode. Use the Roll Trim and Pitch Trim sliders in the app settings (Section 8) to compensate. Adjust in 0.5° increments and re-test. Also check that the battery is centred on the frame — off-centre weight shifts the centre of gravity.
+      </div>
+    </div>
+
+    <div class="trouble-item">
+      <div class="trouble-q">Only 2 or 3 motors spin</div>
+      <div class="trouble-a">
+        A motor may not be fully seated in its socket. Power off, press each motor down firmly until it clicks. Also check that the motor wire isn't kinked or broken at the strain relief point. If a motor is confirmed dead, replacement coreless motors matching the original size (typically 0720 or 0820 coreless) are available cheaply on AliExpress.
+      </div>
+    </div>
+
+    <div class="trouble-item">
+      <div class="trouble-q">Very short flight time (under 2 minutes)</div>
+      <div class="trouble-a">
+        The battery may be degraded or deeply discharged. Always charge immediately after flight. If the battery voltage drops below 3.0 V per cell (1S = 3.0 V total), the chemistry is damaged. Purchase a replacement 300 mAh 1S LiPo. Also check that no prop is rubbing on the prop guard — increased friction drains the battery faster.
+      </div>
+    </div>
+
+    <div class="trouble-item">
+      <div class="trouble-q">The ESP-Drone app crashes or freezes</div>
+      <div class="trouble-a">
+        Force-close the app and re-open. Make sure your iPhone is running iOS 14 or later. If the issue persists, delete and re-install the app from the App Store. Check the GitHub repo (EspressifApps/ESP-Drone-iOS) for any known iOS version issues.
+      </div>
+    </div>
+  </section>
+
+  <!-- ─────────────────────────────────────── -->
+  <!-- 11 ADVANCED / DEV                       -->
+  <!-- ─────────────────────────────────────── -->
+  <section id="advanced">
+    <div class="section-header">
+      <span class="section-num">11</span>
+      <h2>Advanced: Firmware &amp; Development</h2>
+    </div>
+
+    <p>The V2.0 ships with firmware pre-flashed. You don't need to reflash for basic flight. This section is for developers who want to modify the firmware or set up a development environment.</p>
+
+    <div class="callout success">
+      <span class="callout-icon">✅</span>
+      <div class="callout-body">
+        <div class="callout-title">V2.0 is Pre-Flashed — Skip This Section to Fly</div>
+        <p class="callout-text">If you just want to fly, skip ahead. Firmware flashing is only needed if you're developing custom features or the factory firmware is corrupted.</p>
+      </div>
+    </div>
+
+    <h3>Key Resources</h3>
+    <div class="table-wrap">
+      <table>
+        <thead>
+          <tr><th>Resource</th><th>URL</th></tr>
+        </thead>
+        <tbody>
+          <tr><td>ESP-Drone Firmware (GitHub)</td><td><code>github.com/espressif/esp-drone</code></td></tr>
+          <tr><td>Official Documentation</td><td><code>docs.espressif.com/projects/espressif-esp-drone</code></td></tr>
+          <tr><td>iOS App Source</td><td><code>github.com/EspressifApps/ESP-Drone-iOS</code></td></tr>
+          <tr><td>Android App Source</td><td><code>github.com/EspressifApps/ESP-Drone-Android</code></td></tr>
+          <tr><td>ESP-IDF Setup Guide</td><td><code>docs.espressif.com/projects/esp-idf</code></td></tr>
+          <tr><td>cfclient (PC debugger)</td><td><code>github.com/bitcraze/crazyflie-clients-python</code></td></tr>
+        </tbody>
+      </table>
+    </div>
+
+    <h3>Reflashing Firmware (if needed)</h3>
+    <p>The firmware targets ESP-IDF <code>release/v5.0</code> or later.</p>
+    <div class="steps">
+      <div class="step">
+        <div class="step-badge">1</div>
+        <div class="step-content">
+          <div class="step-title">Install ESP-IDF</div>
+          <p class="step-desc">Follow the ESP-IDF Getting Started guide for your OS. Install the <code>release/v5.0</code> branch specifically: <code>git clone -b release/v5.0 https://github.com/espressif/esp-idf.git</code></p>
+        </div>
+      </div>
+      <div class="step">
+        <div class="step-badge">2</div>
+        <div class="step-content">
+          <div class="step-title">Clone the ESP-Drone repository</div>
+          <p class="step-desc"><code>git clone https://github.com/espressif/esp-drone.git --recursive</code></p>
+        </div>
+      </div>
+      <div class="step">
+        <div class="step-badge">3</div>
+        <div class="step-content">
+          <div class="step-title">Set the target chip</div>
+          <p class="step-desc">For V2.0 with ESP32-S2: <code>idf.py set-target esp32s2</code></p>
+        </div>
+      </div>
+      <div class="step">
+        <div class="step-badge">4</div>
+        <div class="step-content">
+          <div class="step-title">Build and flash</div>
+          <p class="step-desc">Connect the board via USB-C (hold BOOT button while connecting to enter flash mode). Run: <code>idf.py build flash monitor -p /dev/ttyUSB0</code> (replace with your serial port).</p>
+        </div>
+      </div>
+    </div>
+
+    <h3>PC Debugging with cfclient</h3>
+    <p>cfclient is a Python desktop app from the Crazyflie project that works with ESP-Drone over WiFi. It lets you tune PID parameters, monitor sensor data live, and control the drone with a USB gamepad.</p>
+    <div class="steps">
+      <div class="step">
+        <div class="step-badge">1</div>
+        <div class="step-content">
+          <div class="step-title">Install cfclient (Python required)</div>
+          <p class="step-desc"><code>git clone https://github.com/qljz1993/crazyflie-clients-python.git</code><br>Then: <code>cd crazyflie-clients-python &amp;&amp; pip3 install -e . &amp;&amp; cfclient</code></p>
+        </div>
+      </div>
+      <div class="step">
+        <div class="step-badge">2</div>
+        <div class="step-content">
+          <div class="step-title">Connect your PC to the drone's WiFi</div>
+          <p class="step-desc">Same credentials: SSID <code>ESP-DRONE_XXXX</code>, password <code>12345678</code>. Then in cfclient, select the WiFi connection type and scan.</p>
+        </div>
+      </div>
+    </div>
+
+    <div class="callout info">
+      <span class="callout-icon">🎮</span>
+      <div class="callout-body">
+        <div class="callout-title">Extension Boards (Optional Upgrades)</div>
+        <p class="callout-text">
+          To unlock Height-hold mode: add the <strong>MS5611 pressure module</strong> extension board via I2C.<br>
+          To unlock Position-hold mode: add the <strong>PMW3901 optical flow + VL53L1X ToF</strong> module, mounted on the underside facing the ground.<br>
+          The <strong>HMC5883 compass module</strong> adds head-free mode for outdoor use.<br>
+          Search these on AliExpress as "ESP-Drone expansion" boards — they use the same edge-connector form factor.
+        </p>
+      </div>
+    </div>
+  </section>
+
+  <footer>
+    <span>ESP32-Drone V2.0 · Based on Espressif ESP-Drone (GPL 3.0)</span>
+    <span>docs.espressif.com/projects/espressif-esp-drone</span>
+  </footer>
+
+</main>
+
+<script>
+  // Highlight active sidebar link on scroll
+  const sections = document.querySelectorAll('section[id]');
+  const links = document.querySelectorAll('.sidebar nav a');
+
+  const observer = new IntersectionObserver((entries) => {
+    entries.forEach(entry => {
+      if (entry.isIntersecting) {
+        links.forEach(l => l.classList.remove('active'));
+        const active = document.querySelector(`.sidebar nav a[href="#${entry.target.id}"]`);
+        if (active) active.classList.add('active');
+      }
+    });
+  }, { rootMargin: '-30% 0px -60% 0px' });
+
+  sections.forEach(s => observer.observe(s));
+</script>
+</body>
+</html>
